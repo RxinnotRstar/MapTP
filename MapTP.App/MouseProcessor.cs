@@ -68,26 +68,26 @@ namespace MapTP.App
         #endregion
         public void MoveCursor(int x, int y)
         {
-                //SetCursorPos(x, y);
-                INPUT[] _input = new INPUT[1];
-                _input[0] = new INPUT
+            //SetCursorPos(x, y);
+            INPUT[] _input = new INPUT[1];
+            _input[0] = new INPUT
+            {
+                type = 0, // INPUT_MOUSE
+                mkhi = new MOUSEKEYBDHARDWAREINPUT
                 {
-                    type = 0, // INPUT_MOUSE
-                    mkhi = new MOUSEKEYBDHARDWAREINPUT
+                    mi = new MOUSEINPUT
                     {
-                        mi = new MOUSEINPUT
-                        {
-                            dx = x,
-                            dy = y,
-                            mouseData = 0,
-                            dwFlags = 0x8000 | 0x0001 | 0x4000, // MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVEMENT | MOUSEEVENTF_VIRTUALDESK
-                            time = 0 // Windows will provide this
-                        }
+                        dx = x,
+                        dy = y,
+                        mouseData = 0,
+                        dwFlags = 0x8000 | 0x0001 | 0x4000, // MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVEMENT | MOUSEEVENTF_VIRTUALDESK
+                        time = 0 // Windows will provide this
                     }
-                };
-                SendInput((uint)1, _input, Marshal.SizeOf(typeof(INPUT)));
-                return;
-            
+                }
+            };
+            SendInput((uint)1, _input, Marshal.SizeOf(typeof(INPUT)));
+            return;
+
         }
         public MouseProcessor()
         {
