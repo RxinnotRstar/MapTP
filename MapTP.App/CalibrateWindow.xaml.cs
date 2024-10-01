@@ -47,15 +47,13 @@ namespace MapTP.App
                             }
                         }
                     }
-                    
-
                     break;
             }
             return IntPtr.Zero;
         }
-   
 
-    public delegate void SendSize(int X, int Y);
+
+        public delegate void SendSize(int X, int Y);
         public SendSize sendSize;
 
         private void OkButton_Click(object sender, RoutedEventArgs e)

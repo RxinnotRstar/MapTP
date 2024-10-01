@@ -31,6 +31,13 @@ namespace MapTP.App
         /// </summary>
         private MouseProcessor mouseProcessor;
 
+        /// <summary>
+        /// This is for sending log messages to the log window
+        /// </summary>
+        /// <param name="message"></param>
+        public delegate void _SendLog(string message);
+        private _SendLog SendLog;
+
         private XmlSerializer ConfigXmlSerializer;
         private Config config;
 
@@ -112,7 +119,7 @@ namespace MapTP.App
             Loaded += OnLoaded;
         }
 
-        private void About_Click(object sender, RoutedEventArgs e)
+        private void AboutButtonClick(object sender, RoutedEventArgs e)
         {
             var w = new AboutWindow();
             w.Show();
@@ -285,6 +292,12 @@ namespace MapTP.App
             };
             bool success = (bool)w.ShowDialog();
             if (success) calibrated = true;
+        }
+        private void AdvancedButtonClick(object sender, RoutedEventArgs e)
+        {
+            var w = new AdvancedWindow(_targetSource);
+            this.SendLog = w.Log;
+            w.Show();
         }
 
         private void OnTouchpadMapUpdate(object sender, RoutedEventArgs e)
