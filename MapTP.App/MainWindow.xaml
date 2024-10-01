@@ -29,10 +29,12 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <Button x:Name="About" VerticalAlignment="Bottom"  Foreground="Black" BorderBrush="Transparent" Background="{x:Null}"  Style="{StaticResource ButtonDefault}" Content="About" Click="About_Click"/>
-                    <Button x:Name="StartButton" Grid.Column="1"  Foreground="Black" BorderBrush="Transparent" Background="{x:Null}" HorizontalAlignment="Right" Margin="10,0,0,0" Style="{StaticResource ButtonPrimary}" Content="Start Mapping" Click="StartButtonClick" Width="150"/>
-                    <Button x:Name="StopButton" Visibility="Collapsed" Grid.Column="1" HorizontalAlignment="Right" Margin="10,0,0,0" Style="{StaticResource ButtonDanger}" Content="Stop Mapping" Click="StopButtonClick" Width="150"/>
+                    <Button x:Name="Advanced" VerticalAlignment="Bottom"  Foreground="Black" BorderBrush="Transparent" Background="{x:Null}"  Style="{StaticResource ButtonDefault}" Content="Advanced" Click="AdvancedButtonClick"/>
+                    <Button x:Name="About" Grid.Column="1"  VerticalAlignment="Bottom"  Foreground="Black" BorderBrush="Transparent" Background="{x:Null}"  Style="{StaticResource ButtonDefault}" Content="About" Click="AboutButtonClick"/>
+                    <Button x:Name="StartButton" Grid.Column="2"  Foreground="Black" BorderBrush="Transparent" Background="{x:Null}" HorizontalAlignment="Right" Margin="10,0,0,0" Style="{StaticResource ButtonPrimary}" Content="Start Mapping" Click="StartButtonClick" Width="150"/>
+                    <Button x:Name="StopButton" Visibility="Collapsed" Grid.Column="2" HorizontalAlignment="Right" Margin="10,0,0,0" Style="{StaticResource ButtonDanger}" Content="Stop Mapping" Click="StopButtonClick" Width="150"/>
                 </Grid>
                 <Button Style="{StaticResource ButtonIcon}" Foreground="Black" Click="OnMinButtonClick" hc:IconElement.Geometry="{StaticResource WindowMinGeometry}"/>
                 <Button Style="{StaticResource ButtonIcon}" Foreground="Black" Click="OnCloseButtonClick" hc:IconElement.Geometry="{StaticResource CloseGeometry}"/>
@@ -97,15 +99,6 @@
                                 <Button Grid.Column="1" Margin="5,0,0,0" Style="{StaticResource ButtonDefault}" Content="Suggest mapping size" Click="SuggestButtonClick" HorizontalAlignment="Left"/>
                             </UniformGrid>
                         </Grid>
-                    </StackPanel>
-                </Border>
-                <Border x:Name="OpCard" Grid.Row="3" Background="#99FFFFFF" Style="{StaticResource BorderRegion}" Effect="{StaticResource EffectShadow2}" Margin="20,20,20,0">
-                    <StackPanel>
-                        <TextBlock HorizontalAlignment="Left" Margin="5,5,5,10" Text="Options" Style="{StaticResource TextBlockTitle}"/>
-                        <WrapPanel>
-                            <Button HorizontalAlignment="Left" Click="OnLaunchInspectorClick" Margin="0,0,10,0">Launch Inspector</Button>
-                            <CheckBox x:Name="TurtleBox" IsChecked="{Binding Path=Turtle, Mode=TwoWay}">Turtle mode</CheckBox>
-                        </WrapPanel>
                     </StackPanel>
                 </Border>
 

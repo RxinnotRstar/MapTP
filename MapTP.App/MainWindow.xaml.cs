@@ -1,4 +1,4 @@
-﻿using MapTP.App.Touchpad;
+﻿using Linearstar.Windows.RawInput;
 using System;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -30,6 +30,13 @@ namespace MapTP.App
         /// This is for moving the mouse
         /// </summary>
         private MouseProcessor mouseProcessor;
+
+        /// <summary>
+        /// This is for sending log messages to the log window
+        /// </summary>
+        /// <param name="message"></param>
+        public delegate void _SendLog(string message);
+        private _SendLog SendLog;
 
         private XmlSerializer ConfigXmlSerializer;
         private Config config;
@@ -106,22 +113,13 @@ namespace MapTP.App
             return;
         }
 
-        public void ReceiveScreenMapArea(int scsx, int scsy, int scex, int scey)
-        {
-            Scsx.Text = scsx.ToString();
-            Scex.Text = scex.ToString();
-            Scsy.Text = scsy.ToString();
-            Scey.Text = scey.ToString();
-            this.StartButtonClick(new object(), new RoutedEventArgs());
-        }
-
         public MainWindow()
         {
             InitializeComponent();
             Loaded += OnLoaded;
         }
 
-        private void About_Click(object sender, RoutedEventArgs e)
+        private void AboutButtonClick(object sender, RoutedEventArgs e)
         {
             var w = new AboutWindow();
             w.Show();
@@ -163,20 +161,25 @@ namespace MapTP.App
             System.Windows.Application.Current.Shutdown();
         }
 
-        private void OnLaunchInspectorClick(object sender, RoutedEventArgs e)
-        {
-            MapAreaWindow w = new MapAreaWindow()
-            {
-                sendArea = ReceiveScreenMapArea
-            };
-            w.Show();
-        }
-
         protected override void OnSourceInitialized(EventArgs e)
         {
             base.OnSourceInitialized(e);
             Closing += OnWindowCloses;
-            ptpExists = Touchpad.Handler.Exists();
+            // ptpExists = Touchpad.Handler.Exists();
+            ptpExists = false;
+            var devices = RawInputDevice.GetDevices();
+            foreach (var device in devices)
+            {
+                if (device.DeviceType == RawInputDeviceType.Hid)
+                {
+                    if (device.UsageAndPage == HidUsageAndPage.TouchPad)
+                    {
+                        ptpExists = true;
+                        break;
+                    }
+                }
+            }
+
 
             mouseProcessor = new MouseProcessor();
 
@@ -194,10 +197,12 @@ namespace MapTP.App
 
             if (ptpExists)
             {
-                bool success;
                 if (_targetSource != null)
-                    success = Touchpad.Handler.RegisterInput(_targetSource.Handle);
-                else success = false;
+                {
+                    // success = Touchpad.Handler.RegisterInput(_targetSource.Handle)
+                    RawInputDevice.RegisterDevice(HidUsageAndPage.TouchPad,
+                        RawInputDeviceFlags.InputSink, _targetSource.Handle);
+                }
                 InitConfig();
             }
             else
@@ -209,8 +214,8 @@ namespace MapTP.App
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
-            
-            
+
+
             if (!(Environment.OSVersion.Version > new Version(10, 0, 17763)))
             {
                 this.Background = Brushes.White;
@@ -222,13 +227,13 @@ namespace MapTP.App
                 PresentationSource presentationSource = PresentationSource.FromVisual((Visual)sender);
 
                 // Subscribe to PresentationSource's ContentRendered event
-                presentationSource.ContentRendered += (s,ev)=>OnRendered(PresentationSource.FromVisual((Visual)sender) as HwndSource);
-                
+                presentationSource.ContentRendered += (s, ev) => OnRendered(PresentationSource.FromVisual((Visual)sender) as HwndSource);
+
 
             }
             else
             {
-                var WalterlvCompositor = new WalterlvBlurManager(this)
+                var WalterlvCompositor = new BlurManager(this)
                 {
                     Color = Color.FromArgb(0x1f, 0x87, 0xce, 0xfa),
                     IsEnabled = true
@@ -288,6 +293,12 @@ namespace MapTP.App
             bool success = (bool)w.ShowDialog();
             if (success) calibrated = true;
         }
+        private void AdvancedButtonClick(object sender, RoutedEventArgs e)
+        {
+            var w = new AdvancedWindow(_targetSource);
+            this.SendLog = w.Log;
+            w.Show();
+        }
 
         private void OnTouchpadMapUpdate(object sender, RoutedEventArgs e)
         {
@@ -313,6 +324,7 @@ namespace MapTP.App
 
         private void OnScreenMapUpdate(object sender, RoutedEventArgs e)
         {
+            StopButtonClick(sender, e);
             bool notEmpty = Scsx.Text != "" && Scsy.Text != "" && Scex.Text != "" && Scey.Text != "";
             if (notEmpty)
             {
@@ -416,16 +428,20 @@ namespace MapTP.App
 
         private void SaveConfig()
         {
-            config.tpsx = tpsx != null ? tpsx:0 ;
-            config.tpsy = tpsy != null ? tpsy:0;
-            config.tpex = tpex != null ? tpex:0;
+#pragma warning disable CS0472
+            // Explanation: If we try to store config when the program starts, these values
+            // WILL be null since they are just initialized.
+            config.tpsx = tpsx != null ? tpsx : 0;
+            config.tpsy = tpsy != null ? tpsy : 0;
+            config.tpex = tpex != null ? tpex : 0;
             config.tpey = tpey != null ? tpey : 0;
-            config.scsx = scsx != null ? scsx:0;
+            config.scsx = scsx != null ? scsx : 0;
             config.scsy = scsy != null ? scsy : 0;
             config.scex = scex != null ? scex : 0;
             config.scey = scey != null ? scey : 0;
-            config.TouchpadSizeX = TouchpadSizeX != null ? TouchpadSizeX:0;
-            config.TouchpadSizeY = TouchpadSizeY != null ? TouchpadSizeY:0;
+            config.TouchpadSizeX = TouchpadSizeX != null ? TouchpadSizeX : 0;
+            config.TouchpadSizeY = TouchpadSizeY != null ? TouchpadSizeY : 0;
+#pragma warning restore CS0472
 
             using (StreamWriter writer = new StreamWriter(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\cn.enita.MapTP\\config.xml"))
             {
@@ -440,9 +456,7 @@ namespace MapTP.App
             return;
         }
 
-        public bool Turtle;
-        private int nowTipSwitch=0;
-       
+
         /// <summary>
         /// This method is for processing touchpad inputs
         /// </summary>
@@ -454,43 +468,51 @@ namespace MapTP.App
         /// <returns></returns>
         private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
+            const int WM_INPUT = 0x00FF;
             switch (msg)
             {
-                case Touchpad.Handler.WM_INPUT:
-                    foreach (TouchpadContact x in Touchpad.Handler.ParseInput(lParam))
+                case WM_INPUT:
+                    var data = RawInputData.FromHandle(lParam);
+                    if (data is RawInputDigitizerData digitizerData)
                     {
-                        if (x.ContactId == 0) // limiting ContactId to 0 is to read the first finger
+                        foreach (var x in digitizerData.Contacts)
                         {
-                            InputX = x.X;
-                            InputY = x.Y;
-                            if (started)
+                            if (x.Identifier == 0) // limiting ContactId(Identifier) to 0 is to read the first finger
                             {
-                                try
+                                if (started)
                                 {
-                                    int X, Y;
-                                    X = (tpsx <= x.X ? 
-                                            (tpex >= x.X ? 
-                                                (int)Math.Floor((((decimal)(x.X - tpsx) / tpgx * scgx) + scsx) / ScreenSizeX * 65535)
-                                            : (int)Math.Floor((decimal)scex/ScreenSizeX*65535) )
-                                        : (int)Math.Floor((decimal)scsx / ScreenSizeX * 65535) );
-                                    Y = (tpsy <= x.Y ?
-                                            (tpey >= x.Y ? 
-                                                (int)Math.Floor((((decimal)(x.Y - tpsy) / tpgy * scgy) + scsy) / ScreenSizeY * 65535)
-                                            : (int)Math.Floor((decimal)scey / ScreenSizeY * 65535) )
-                                        : (int)Math.Floor((decimal)scsy / ScreenSizeY * 65535) );
-                                    mouseProcessor.MoveCursor(X, Y);
-                                    if (nowTipSwitch == 1 && x.TipSwitch == 0 && Turtle) mouseProcessor.MouseUp();
-                                    if (nowTipSwitch == 0 && x.TipSwitch == 1 && Turtle) mouseProcessor.MouseDown();
-                                }
-                                catch (Exception e)
-                                {
-                                    HandyControl.Controls.MessageBox.Show(e.ToString());
+                                    try
+                                    {
+                                        int X, Y;
+                                        X = (tpsx <= x.X ?
+                                                (tpex >= x.X ?
+                                                    (int)Math.Floor((((decimal)(x.X - tpsx) / tpgx * scgx) + scsx) / ScreenSizeX * 65535)
+                                                : (int)Math.Floor((decimal)scex / ScreenSizeX * 65535))
+                                            : (int)Math.Floor((decimal)scsx / ScreenSizeX * 65535));
+                                        Y = (tpsy <= x.Y ?
+                                                (tpey >= x.Y ?
+                                                    (int)Math.Floor((((decimal)(x.Y - tpsy) / tpgy * scgy) + scsy) / ScreenSizeY * 65535)
+                                                : (int)Math.Floor((decimal)scey / ScreenSizeY * 65535))
+                                            : (int)Math.Floor((decimal)scsy / ScreenSizeY * 65535));
+                                        mouseProcessor.MoveCursor(X, Y);
+
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        HandyControl.Controls.MessageBox.Show(e.ToString());
+                                    }
                                 }
                             }
-                            nowTipSwitch = x.TipSwitch;
-
-
                         }
+                        /*
+                        foreach (TouchpadContact x in Touchpad.Handler.ParseInput(lParam))
+                        {
+                            if (x.ContactId == 0) // limiting ContactId to 0 is to read the first finger
+                            {
+                                InputX = x.X;
+                                InputY = x.Y;
+                            }
+                        }*/
                     }
 
                     break;

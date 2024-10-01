@@ -1,4 +1,4 @@
-﻿using MapTP.App.Touchpad;
+﻿using Linearstar.Windows.RawInput;
 using System;
 using System.Windows;
 using System.Windows.Interop;
@@ -10,7 +10,7 @@ namespace MapTP.App
     /// </summary>
     public partial class CalibrateWindow : Window
     {
-        private int X=0, Y=0;
+        private int X = 0, Y = 0;
         private HwndSource MainWindowHwnd;
 
         public CalibrateWindow()
@@ -30,23 +30,28 @@ namespace MapTP.App
 
         private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
+            const int WM_INPUT = 0x00FF;
             switch (msg)
             {
-                case Touchpad.Handler.WM_INPUT:
-                    foreach (TouchpadContact x in Touchpad.Handler.ParseInput(lParam))
+                case WM_INPUT:
+                    var data = RawInputData.FromHandle(lParam);
+                    if (data is RawInputDigitizerData digitizerData)
                     {
-                        if (x.ContactId == 0) // limiting ContactId to 0 is to read the first finger
+                        foreach (var x in digitizerData.Contacts)
                         {
-                            X = (int)Math.Ceiling((double)(x.X / 100f)) * 100;
-                            Y = (int)Math.Ceiling((double)(x.Y / 100f)) * 100;
-                            TouchpadSize.Text = $"Touchpad size: {X}, {Y}";
+                            if (x.Identifier == 0) // limiting ContactId(Identifier) to 0 is to read the first finger
+                            {
+                                X = (int)Math.Ceiling((double)(x.X / 100f)) * 100;
+                                Y = (int)Math.Ceiling((double)(x.Y / 100f)) * 100;
+                                TouchpadSize.Text = $"Touchpad size: {X}, {Y}";
+                            }
                         }
                     }
-
                     break;
             }
             return IntPtr.Zero;
         }
+
 
         public delegate void SendSize(int X, int Y);
         public SendSize sendSize;
