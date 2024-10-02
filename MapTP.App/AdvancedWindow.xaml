@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MapTP.App"
         mc:Ignorable="d"
-        Title="AdvancedWindow" MinHeight="300" Width="430">
+        Title="MapTP - Log Window" Height="200" MinHeight="200" Width="430">
   <Grid Margin="10,10,10,10">
         <Grid.RowDefinitions>
             <RowDefinition/>

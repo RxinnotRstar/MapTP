@@ -4,15 +4,16 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:MapTP.App"
+        xmlns:local="clr-namespace:MapTP.App" xmlns:tray="http://schemas.lepo.co/wpfui/2022/xaml/tray"
         mc:Ignorable="d"
-        Title="MapTP" Height="500" Width="800"
+        Title="MapTP" Height="552" Width="800"
         Foreground="{DynamicResource SystemControlPageTextBaseHighBrush}"
         WindowStyle="None"
-        Background="#33aaaaff">
+        Background="#33ff4444">
     <WindowChrome.WindowChrome>
         <WindowChrome x:Name="WindowChrome" GlassFrameThickness="0,0,-1,0"/>
     </WindowChrome.WindowChrome>
+    
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
@@ -26,15 +27,8 @@
             <TextBlock Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left" Foreground="Black" Margin="20,0,0,0" Style="{StaticResource TextBlockDefault}">MapTP</TextBlock>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="1" Margin="0,5,20,0">
                 <Grid HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,10,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <Button x:Name="Advanced" VerticalAlignment="Bottom"  Foreground="Black" BorderBrush="Transparent" Background="{x:Null}"  Style="{StaticResource ButtonDefault}" Content="Advanced" Click="AdvancedButtonClick"/>
-                    <Button x:Name="About" Grid.Column="1"  VerticalAlignment="Bottom"  Foreground="Black" BorderBrush="Transparent" Background="{x:Null}"  Style="{StaticResource ButtonDefault}" Content="About" Click="AboutButtonClick"/>
-                    <Button x:Name="StartButton" Grid.Column="2"  Foreground="Black" BorderBrush="Transparent" Background="{x:Null}" HorizontalAlignment="Right" Margin="10,0,0,0" Style="{StaticResource ButtonPrimary}" Content="Start Mapping" Click="StartButtonClick" Width="150"/>
-                    <Button x:Name="StopButton" Visibility="Collapsed" Grid.Column="2" HorizontalAlignment="Right" Margin="10,0,0,0" Style="{StaticResource ButtonDanger}" Content="Stop Mapping" Click="StopButtonClick" Width="150"/>
+                    <Button x:Name="StartButton" Grid.Column="1"  Foreground="Black" Background="LightPink" BorderBrush="Black" HorizontalAlignment="Right" Margin="10,0,0,0" Style="{StaticResource ButtonPrimary}" Content="Start Mapping" Click="StartButtonClick" Width="150"/>
+                    <Button x:Name="StopButton" Visibility="Collapsed" Grid.Column="1" HorizontalAlignment="Right" Margin="10,0,0,0" Style="{StaticResource ButtonDanger}" Content="Stop Mapping" Click="StopButtonClick" Width="150"/>
                 </Grid>
                 <Button Style="{StaticResource ButtonIcon}" Foreground="Black" Click="OnMinButtonClick" hc:IconElement.Geometry="{StaticResource WindowMinGeometry}"/>
                 <Button Style="{StaticResource ButtonIcon}" Foreground="Black" Click="OnCloseButtonClick" hc:IconElement.Geometry="{StaticResource CloseGeometry}"/>
@@ -60,7 +54,7 @@
                             </Grid.ColumnDefinitions>
                             <Grid x:Name="TpRectGrid" Height="100" Width="150" Grid.Column="0">
                                 <Rectangle x:Name="TpAreaRect" Height="100" Width="150" Stroke="Gray"></Rectangle>
-                                <Rectangle x:Name="TpMapareaRect" VerticalAlignment="Top" HorizontalAlignment="Left" Fill="#5500BFF4" Stroke="#FF00BFF4" ></Rectangle>
+                                <Rectangle x:Name="TpMapareaRect" VerticalAlignment="Top" HorizontalAlignment="Left"  Fill="#55F00074" Stroke="#FFF00074" ></Rectangle>
                             </Grid>
                             <UniformGrid Margin="10,0,10,0" Grid.Column="1" Columns="2">
                                 <TextBox x:Name="Tpsx" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="limitnumber" TextChanged="OnTouchpadMapUpdate" Style="{StaticResource TextBoxExtend}" Margin="0,0,5,0" hc:InfoElement.Placeholder="Start X" VerticalAlignment="Center"/>
@@ -86,7 +80,7 @@
                             </Grid.ColumnDefinitions>
                             <Grid x:Name="ScRectGrid" Width="150" Height="100">
                                 <Rectangle x:Name="ScAreaRect" Grid.Column="0" Height="100" Width="150" Stroke="Gray"></Rectangle>
-                                <Rectangle x:Name="ScMapareaRect" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Column="0" Fill="#5500BFF4" Stroke="#FF00BFF4" ></Rectangle>
+                                <Rectangle x:Name="ScMapareaRect" HorizontalAlignment="Left" VerticalAlignment="Top" Grid.Column="0" Fill="#55F00074" Stroke="#FFF00074" ></Rectangle>
                             </Grid>
                             <UniformGrid Margin="10,0,10,0" Grid.Column="1" Columns="2">
                                 <TextBox x:Name="Scsx" TextChanged="OnScreenMapUpdate" InputMethod.IsInputMethodEnabled="False" PreviewTextInput="limitnumber" Style="{StaticResource TextBoxExtend}" Margin="0,0,5,0" hc:InfoElement.Placeholder="Start X" VerticalAlignment="Center"/>
@@ -101,8 +95,44 @@
                         </Grid>
                     </StackPanel>
                 </Border>
+                <Border x:Name="OptCard" Grid.Row="3" Background="#99FFFFFF" Style="{StaticResource BorderRegion}" Effect="{StaticResource EffectShadow2}" Margin="20,20,20,0">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition></RowDefinition>
+                            <RowDefinition></RowDefinition>
+                            <RowDefinition></RowDefinition>
+                        </Grid.RowDefinitions>
+                        <TextBlock HorizontalAlignment="Left" Margin="5" Text="Options" Style="{StaticResource TextBlockTitle}"/>
+                        <StackPanel Orientation="Horizontal" Grid.Row="1">
+                            <Button Content="Launch inspector"  Click="InspectorButtonClick"></Button>
+                            <Button Content="Launch log window" Margin="10,0,0,0" Click="AdvancedButtonClick"></Button>
+                            <Button Content="About MapTP" Margin="10,0,0,0" Click="AboutButtonClick"></Button>
 
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0" Grid.Row="2">
+                            <CheckBox x:Name="TurtleCB" Content="Turtle mode" IsChecked="False" Click="TurtleCBClick"></CheckBox>
+                            <CheckBox x:Name="TrayCB" Content="Enable Tray icon" Margin="10,0,0,0" IsChecked="True" Click="TrayCBClick"></CheckBox>
+                            <CheckBox x:Name="HideCB" Content="Hide to tray when minimized" Margin="10,0,0,0" IsChecked="True"></CheckBox>
+                        </StackPanel>
+                    </Grid>
+                </Border>
             </Grid>
         </ScrollViewer>
+        <tray:NotifyIcon
+            x:Name="TrayIcon"
+            TooltipText="MapTP (Not Mapping)"
+            MenuOnRightClick="True"
+            FocusOnLeftClick="True"
+            LeftClick="TrayShowWindowClick"
+            Icon="pack://application:,,,/logo-inactive.ico"
+            >
+            <tray:NotifyIcon.Menu>
+                <ContextMenu>
+                    <MenuItem x:Name="TrayWorkingMenuItem" Header="MapTP is not working..." IsEnabled="False" />
+                    <MenuItem x:Name="TrayStartMenuItem" Header="Start" Click="StartButtonClick" />
+                    <MenuItem x:Name="TrayShowMenuItem" Header="Show MapTP window" Click="TrayShowWindowClick" IsEnabled="False"/>
+                </ContextMenu>
+            </tray:NotifyIcon.Menu>
+        </tray:NotifyIcon>
     </Grid>
 </Window>

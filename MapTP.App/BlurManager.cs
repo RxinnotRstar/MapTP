@@ -77,7 +77,7 @@ namespace MapTP.App
         private void Composite(IntPtr handle, bool isEnabled)
         {
             // 操作系统版本判定。
-            var osVersion = Environment.OSVersion.Version;
+            var osVersion = OSVersionExtension.OSVersion.GetOSVersion().Version;
             var windows10_1809 = new Version(10, 0, 17763);
             var windows10 = new Version(10, 0);
             var windows11_buildver = 22000;

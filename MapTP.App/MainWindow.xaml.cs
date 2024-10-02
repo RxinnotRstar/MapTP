@@ -1,4 +1,6 @@
 ﻿using Linearstar.Windows.RawInput;
+using Microsoft.Toolkit.Uwp.Notifications;
+using OSVersionExtension;
 using System;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -6,6 +8,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Xml;
 using System.Xml.Serialization;
 
@@ -96,6 +99,11 @@ namespace MapTP.App
         private bool started;
 
         /// <summary>
+        /// if turtle mode is enabled, this should be true
+        /// </summary>
+        private bool turtle;
+
+        /// <summary>
         /// This is for accepting touchpad size from the calibration window
         /// </summary>
         /// <param name="X"></param>
@@ -113,10 +121,60 @@ namespace MapTP.App
             return;
         }
 
+        public void ReceiveScreenArea(int X, int Y, int eX, int eY)
+        {
+            Scsx.Text = X.ToString();
+            Scsy.Text = Y.ToString();
+            Scex.Text = eX.ToString();
+            Scey.Text = eY.ToString();
+        }
+
         public MainWindow()
         {
             InitializeComponent();
             Loaded += OnLoaded;
+        }
+
+        /*private void TrayButtonClick(object sender, RoutedEventArgs e)
+        {
+            var t = new Wpf.Ui.Tray.Controls.NotifyIcon();
+            t.Register();
+            this.Visibility = Visibility.Hidden;
+            this.ShowInTaskbar = false;
+        }*/
+
+        private void TrayCBClick(object sender, RoutedEventArgs e)
+        {
+            if (TrayCB.IsChecked.Value)
+            {
+                TrayIcon.Register();
+            }
+            else
+            {
+                TrayIcon.Unregister();
+            }
+        }
+
+        private void TrayShowWindowClick(object sender, RoutedEventArgs e) {
+            TrayShowMenuItem.IsEnabled = false;
+            this.Visibility= Visibility.Visible;
+            this.ShowInTaskbar = true;
+        }
+
+        private void TurtleCBClick(object sender, RoutedEventArgs e)
+        {
+            this.turtle=TurtleCB.IsChecked.Value;
+        }
+
+        private void InspectorButtonClick(object sender, RoutedEventArgs e)
+        {
+            if (started) StopButtonClick(new object(), new RoutedEventArgs());
+            var w= new InspectorWindow(scsx, scsy, scex, scey);
+            
+            w.SendScreenArea = ReceiveScreenArea;
+            w.MainWindow_Start = StartButtonClick;
+            w.MainWindow_Stop = StopButtonClick;
+            w.Show();
         }
 
         private void AboutButtonClick(object sender, RoutedEventArgs e)
@@ -137,6 +195,14 @@ namespace MapTP.App
                 Tpsy.Text = "0";
                 Tpex.Text = TouchpadSizeX.ToString();
                 Tpey.Text = ((int)Math.Floor((double)TouchpadSizeX / ScreenSizeX * ScreenSizeY)).ToString();
+                if (tpey > TouchpadSizeY)
+                {
+                    Tpey.Text = TouchpadSizeY.ToString();
+                    var width = ((int)Math.Floor((double)TouchpadSizeY / ScreenSizeY * ScreenSizeX));
+                    var margin=(TouchpadSizeX - width)/2;
+                    Tpsx.Text = margin.ToString();
+                    Tpex.Text = (width + margin).ToString();
+                }
             }
             else
             {
@@ -152,11 +218,25 @@ namespace MapTP.App
 
         private void OnMinButtonClick(object sender, RoutedEventArgs e)
         {
-            WindowState = WindowState.Minimized;
+            if (HideCB.IsChecked.Value && TrayCB.IsChecked.Value)
+            {
+                // Hide to tray
+                this.Visibility = Visibility.Hidden;
+                this.ShowInTaskbar = false;
+                TrayShowMenuItem.IsEnabled = true;
+                 new ToastContentBuilder()
+                        .AddText("MapTP is hidden to the taskbar tray!").Show();
+            }
+            else WindowState = WindowState.Minimized;
         }
 
         private void OnCloseButtonClick(object sender, RoutedEventArgs e)
         {
+            if (HideCB.IsChecked.Value)
+            {
+                var r=MessageBox.Show("Are you sure to close MapTP?\n(use minimize to hide MapTP into tray icon)", "Closing MapTP", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                if (r != MessageBoxResult.Yes) return;
+            }
             Close();
             System.Windows.Application.Current.Shutdown();
         }
@@ -214,13 +294,12 @@ namespace MapTP.App
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
-
-
-            if (!(Environment.OSVersion.Version > new Version(10, 0, 17763)))
+            var version = OSVersion.GetOSVersion().Version;
+            if (!(version > new Version(10, 0, 17763)))
             {
                 this.Background = Brushes.White;
             }
-            else if (Environment.OSVersion.Version.Build >= 22000) // Mica
+            else if (version.Build >= 22000) // Mica
             {
 
                 // Get PresentationSource
@@ -235,7 +314,7 @@ namespace MapTP.App
             {
                 var WalterlvCompositor = new BlurManager(this)
                 {
-                    Color = Color.FromArgb(0x1f, 0x87, 0xce, 0xfa),
+                    Color = Color.FromArgb(0x1f, 0xf0, 0x00, 0x74),
                     IsEnabled = true
                 };
                 this.WindowChrome.GlassFrameThickness = new Thickness(0, 0, 1, 0);
@@ -269,6 +348,11 @@ namespace MapTP.App
             started = true;
             StartButton.Visibility = Visibility.Collapsed;
             StopButton.Visibility = Visibility.Visible;
+            TrayWorkingMenuItem.Header = "MapTP is working...";
+            TrayStartMenuItem.Header = "Stop";
+            TrayStartMenuItem.Click -= StartButtonClick;
+            TrayStartMenuItem.Click += StopButtonClick;
+            TrayIcon.Icon = new BitmapImage(new Uri("pack://application:,,,/logo.ico"));
         }
 
         private void StopButtonClick(object sender, RoutedEventArgs e)
@@ -276,6 +360,11 @@ namespace MapTP.App
             started = false;
             StopButton.Visibility = Visibility.Collapsed;
             StartButton.Visibility = Visibility.Visible;
+            TrayWorkingMenuItem.Header = "MapTP is not working...";
+            TrayStartMenuItem.Header = "Start";
+            TrayStartMenuItem.Click -= StopButtonClick;
+            TrayStartMenuItem.Click += StartButtonClick;
+            TrayIcon.Icon = new BitmapImage(new Uri("pack://application:,,,/logo-inactive.ico"));
         }
 
         /// <summary>
@@ -293,12 +382,14 @@ namespace MapTP.App
             bool success = (bool)w.ShowDialog();
             if (success) calibrated = true;
         }
+
         private void AdvancedButtonClick(object sender, RoutedEventArgs e)
         {
             var w = new AdvancedWindow(_targetSource);
             this.SendLog = w.Log;
             w.Show();
         }
+
 
         private void OnTouchpadMapUpdate(object sender, RoutedEventArgs e)
         {
@@ -372,7 +463,16 @@ namespace MapTP.App
             {
                 using (XmlReader reader = XmlReader.Create(filePath))
                 {
-                    config = (Config)ConfigXmlSerializer.Deserialize(reader);
+                    try
+                    {
+                        config = (Config)ConfigXmlSerializer.Deserialize(reader);
+                    }
+                    catch
+                    {
+                        File.Delete(filePath);
+                        InitConfig();
+                        return;
+                    }
                 }
                 if (config.TouchpadSizeX != 0 && config.TouchpadSizeY != 0) calibrated = true;
                 else calibrated = false;
@@ -384,6 +484,10 @@ namespace MapTP.App
                 Scsy.Text = config.scsy.ToString();
                 Scex.Text = config.scex.ToString();
                 Scey.Text = config.scey.ToString();
+                TurtleCB.IsChecked = config.Turtle;
+                turtle=config.Turtle;
+                TrayCB.IsChecked = config.Tray;
+                HideCB.IsChecked = config.HideToTray;
                 ReceiveTouchpadSize(config.TouchpadSizeX, config.TouchpadSizeY);
                 ConfigScreenMapUpdate(config);
                 ConfigTouchpadMapUpdate(config);
@@ -422,7 +526,6 @@ namespace MapTP.App
             ScMapareaRect.Margin = new Thickness((ScAreaRect.Width * (scsx / (double)ScreenSizeX)), (100d * (scsy / (double)ScreenSizeY)), 0, 0);
             ScMapareaRect.Width = Math.Floor(ScAreaRect.Width * (scgx / (double)ScreenSizeX));
             ScMapareaRect.Height = Math.Floor(100d * (scgy / (double)ScreenSizeY));
-
         }
 
 
@@ -442,6 +545,9 @@ namespace MapTP.App
             config.TouchpadSizeX = TouchpadSizeX != null ? TouchpadSizeX : 0;
             config.TouchpadSizeY = TouchpadSizeY != null ? TouchpadSizeY : 0;
 #pragma warning restore CS0472
+            config.Turtle = TurtleCB.IsChecked.Value;
+            config.Tray = TrayCB.IsChecked.Value;
+            config.HideToTray = HideCB.IsChecked.Value;
 
             using (StreamWriter writer = new StreamWriter(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\cn.enita.MapTP\\config.xml"))
             {
@@ -456,6 +562,7 @@ namespace MapTP.App
             return;
         }
 
+        private bool lastTip;
 
         /// <summary>
         /// This method is for processing touchpad inputs
@@ -479,6 +586,7 @@ namespace MapTP.App
                         {
                             if (x.Identifier == 0) // limiting ContactId(Identifier) to 0 is to read the first finger
                             {
+                                var curTip = x.IsButtonDown.Value;
                                 if (started)
                                 {
                                     try
@@ -495,13 +603,27 @@ namespace MapTP.App
                                                 : (int)Math.Floor((decimal)scey / ScreenSizeY * 65535))
                                             : (int)Math.Floor((decimal)scsy / ScreenSizeY * 65535));
                                         mouseProcessor.MoveCursor(X, Y);
-
+                                        if (turtle)
+                                        {
+                                            if (lastTip != curTip)
+                                            {
+                                                if (curTip)
+                                                {
+                                                    mouseProcessor.MouseDown();
+                                                }
+                                                else
+                                                {
+                                                    mouseProcessor.MouseUp();
+                                                }
+                                            } 
+                                        }
                                     }
                                     catch (Exception e)
                                     {
                                         HandyControl.Controls.MessageBox.Show(e.ToString());
                                     }
                                 }
+                                lastTip = curTip;
                             }
                         }
                         /*
@@ -547,7 +669,16 @@ namespace MapTP.App
         [XmlElement("touchpad-size-y")]
         public int TouchpadSizeY;
 
-        public Config(int scsx, int tpsx, int scsy, int tpsy, int scex, int tpex, int tpey, int scey, int touchpadSizeX, int touchpadSizeY)
+        [XmlElement("tray")]
+        public bool Tray;
+
+        [XmlElement("hide-to-tray")]
+        public bool HideToTray;
+
+        [XmlElement("turtle")]
+        public bool Turtle;
+
+        public Config(int scsx, int tpsx, int scsy, int tpsy, int scex, int tpex, int tpey, int scey, int touchpadSizeX, int touchpadSizeY, bool tray, bool hideToTray, bool turtle)
         {
             this.scsx = scsx;
             this.tpsx = tpsx;
@@ -559,8 +690,11 @@ namespace MapTP.App
             this.scey = scey;
             TouchpadSizeX = touchpadSizeX;
             TouchpadSizeY = touchpadSizeY;
+            Tray = tray;
+            HideToTray = hideToTray;
+            Turtle = turtle;
         }
-        public Config() : this(0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+        public Config() : this(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, true, true, false)
         { }
     }
 }
