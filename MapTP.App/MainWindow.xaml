@@ -120,7 +120,7 @@
         </ScrollViewer>
         <tray:NotifyIcon
             x:Name="TrayIcon"
-            TooltipText="MapTP (Not Mapping)"
+            TooltipText="MapTP (inactive)"
             MenuOnRightClick="True"
             FocusOnLeftClick="True"
             LeftClick="TrayShowWindowClick"

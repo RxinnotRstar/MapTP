@@ -353,6 +353,7 @@ namespace MapTP.App
             TrayStartMenuItem.Click -= StartButtonClick;
             TrayStartMenuItem.Click += StopButtonClick;
             TrayIcon.Icon = new BitmapImage(new Uri("pack://application:,,,/logo.ico"));
+            TrayIcon.TooltipText = "MapTP (active)";
         }
 
         private void StopButtonClick(object sender, RoutedEventArgs e)
@@ -365,6 +366,7 @@ namespace MapTP.App
             TrayStartMenuItem.Click -= StopButtonClick;
             TrayStartMenuItem.Click += StartButtonClick;
             TrayIcon.Icon = new BitmapImage(new Uri("pack://application:,,,/logo-inactive.ico"));
+            TrayIcon.TooltipText = "MapTP (inactive)";
         }
 
         /// <summary>
